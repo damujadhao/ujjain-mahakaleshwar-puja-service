@@ -47,40 +47,17 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICustomerAuthService, CustomerAuthService>();
 
-// Add OpenAPI services
-builder.Services.AddOpenApi();
+// Add Swagger/OpenAPI services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    
-    // Serve Swagger UI using CDN
-    app.MapGet("/", () => Results.Content("""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Pooja Path Booking API</title>
-            <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
-        </head>
-        <body>
-            <div id="swagger-ui"></div>
-            <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
-            <script>
-                window.onload = () => {
-                    window.ui = SwaggerUIBundle({
-                        url: '/openapi/v1.json',
-                        dom_id: '#swagger-ui',
-                    });
-                };
-            </script>
-        </body>
-        </html>
-        """, "text/html")).ExcludeFromDescription();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

@@ -7,3 +7,4 @@
 /poojaPathBooking/obj
 *.http
 *.md
+/poojaPathBooking/bin/Debug/net8.0
