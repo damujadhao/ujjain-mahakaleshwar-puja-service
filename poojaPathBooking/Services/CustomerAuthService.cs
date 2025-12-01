@@ -33,7 +33,7 @@ public class CustomerAuthService : ICustomerAuthService
         {
             var customer = await GetCustomerByEmailOrContactAsync(dto.EmailOrContact);
 
-            if (customer == null || !customer.IsActive)
+            if (customer == null || !Convert.ToBoolean(customer.IsActive))
             {
                 _logger.LogWarning("Login failed: Customer with email/contact {EmailOrContact} not found or inactive", dto.EmailOrContact);
                 return null;
@@ -106,8 +106,10 @@ public class CustomerAuthService : ICustomerAuthService
                 Country = dto.Country,
                 State = dto.State,
                 District = dto.District,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                IsActive = 1,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                CustomerId = Guid.NewGuid()
             };
 
             _context.Customers.Add(customer);

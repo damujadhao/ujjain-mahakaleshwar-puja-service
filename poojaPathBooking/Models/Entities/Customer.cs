@@ -39,7 +39,7 @@ public class Customer
     public string? District { get; set; }
 
     [Required]
-    public bool IsActive { get; set; } = true;
+    public Int16 IsActive { get; set; } = 1;
 
     [Required]
     public DateTime CreatedAt { get; set; }
