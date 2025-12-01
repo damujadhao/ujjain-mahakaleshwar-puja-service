@@ -7,16 +7,10 @@ using poojaPathBooking.Services.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CustomerController : ControllerBase
+public class CustomerController(ICustomerService customerService, ILogger<CustomerController> logger) : ControllerBase
 {
-    private readonly ICustomerService _customerService;
-    private readonly ILogger<CustomerController> _logger;
-
-    public CustomerController(ICustomerService customerService, ILogger<CustomerController> logger)
-    {
-        _customerService = customerService;
-        _logger = logger;
-    }
+    private readonly ICustomerService _customerService = customerService;
+    private readonly ILogger<CustomerController> _logger = logger;
 
     /// <summary>
     /// Retrieves all customers from the database
@@ -35,7 +29,7 @@ public class CustomerController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving all customers");
-            return StatusCode(500, "An error occurred while retrieving customers");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -52,6 +46,7 @@ public class CustomerController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Retrieving customer with ID {Id}", id);
             var customer = await _customerService.GetCustomerByIdAsync(id);
 
             if (customer == null)
@@ -64,7 +59,7 @@ public class CustomerController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving customer with ID {Id}", id);
-            return StatusCode(500, "An error occurred while retrieving the customer");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -93,7 +88,7 @@ public class CustomerController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving customer with email {Email}", email);
-            return StatusCode(500, "An error occurred while retrieving the customer");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -122,29 +117,7 @@ public class CustomerController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving customer with contact {Contact}", contactNumber);
-            return StatusCode(500, "An error occurred while retrieving the customer");
-        }
-    }
-
-    /// <summary>
-    /// Retrieves customers filtered by state
-    /// </summary>
-    /// <param name="state">The state name to filter by</param>
-    /// <returns>A list of customers from the specified state</returns>
-    [HttpGet("state/{state}")]
-    [ProducesResponseType(typeof(IEnumerable<Customer>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<Customer>>> GetCustomersByState(string state)
-    {
-        try
-        {
-            var customers = await _customerService.GetCustomersByStateAsync(state);
-            return Ok(customers);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving customers from state {State}", state);
-            return StatusCode(500, "An error occurred while retrieving customers");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -182,7 +155,7 @@ public class CustomerController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating customer");
-            return StatusCode(500, "An error occurred while creating the customer");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -197,7 +170,7 @@ public class CustomerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateCustomer(Guid id, [FromBody] UpdateCustomerDto dto)
+    public async Task<IActionResult> UpdateCustomerById(Guid id, [FromBody] UpdateCustomerDto dto)
     {
         try
         {
@@ -228,7 +201,7 @@ public class CustomerController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating customer with ID {Id}", id);
-            return StatusCode(500, "An error occurred while updating the customer");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -241,10 +214,11 @@ public class CustomerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteCustomer(Guid id)
+    public async Task<IActionResult> DeleteCustomerById(Guid id)
     {
         try
         {
+            _logger.LogInformation("Deleting customer with ID {Id}", id);
             var result = await _customerService.DeleteCustomerAsync(id);
 
             if (!result)
@@ -257,7 +231,7 @@ public class CustomerController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting customer with ID {Id}", id);
-            return StatusCode(500, "An error occurred while deleting the customer");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 }

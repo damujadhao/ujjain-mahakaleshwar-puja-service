@@ -11,21 +11,14 @@ using poojaPathBooking.Models.DTOs;
 using poojaPathBooking.Models.Entities;
 using poojaPathBooking.Services.Interfaces;
 
-public class AuthService : IAuthService
+public class AuthService(
+    ApplicationDbContext context,
+    IConfiguration configuration,
+    ILogger<AuthService> logger) : IAuthService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<AuthService> _logger;
-
-    public AuthService(
-        ApplicationDbContext context,
-        IConfiguration configuration,
-        ILogger<AuthService> logger)
-    {
-        _context = context;
-        _configuration = configuration;
-        _logger = logger;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly ILogger<AuthService> _logger = logger;
 
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
     {
@@ -46,7 +39,7 @@ public class AuthService : IAuthService
             }
 
             var token = GenerateJwtToken(user);
-            var expiresAt = DateTime.UtcNow.AddHours(
+            var expiresAt = DateTime.Now.AddHours(
                 int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24"));
 
             return new AuthResponseDto
@@ -91,14 +84,14 @@ public class AuthService : IAuthService
                 PasswordHash = HashPassword(dto.Password),
                 Role = dto.Role,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             var token = GenerateJwtToken(user);
-            var expiresAt = DateTime.UtcNow.AddHours(
+            var expiresAt = DateTime.Now.AddHours(
                 int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24"));
 
             return new AuthResponseDto
@@ -141,7 +134,7 @@ public class AuthService : IAuthService
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24")),
+            expires: DateTime.Now.AddHours(int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24")),
             signingCredentials: credentials
         );
 

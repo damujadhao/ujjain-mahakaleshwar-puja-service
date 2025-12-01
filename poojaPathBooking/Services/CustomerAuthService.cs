@@ -11,21 +11,14 @@ using poojaPathBooking.Models.DTOs;
 using poojaPathBooking.Models.Entities;
 using poojaPathBooking.Services.Interfaces;
 
-public class CustomerAuthService : ICustomerAuthService
+public class CustomerAuthService(
+    ApplicationDbContext context,
+    IConfiguration configuration,
+    ILogger<CustomerAuthService> logger) : ICustomerAuthService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<CustomerAuthService> _logger;
-
-    public CustomerAuthService(
-        ApplicationDbContext context,
-        IConfiguration configuration,
-        ILogger<CustomerAuthService> logger)
-    {
-        _context = context;
-        _configuration = configuration;
-        _logger = logger;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly ILogger<CustomerAuthService> _logger = logger;
 
     public async Task<CustomerAuthResponseDto?> LoginAsync(CustomerLoginDto dto)
     {
@@ -52,7 +45,7 @@ public class CustomerAuthService : ICustomerAuthService
             }
 
             var token = GenerateCustomerJwtToken(customer);
-            var expiresAt = DateTime.UtcNow.AddHours(
+            var expiresAt = DateTime.Now.AddHours(
                 int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24"));
 
             return new CustomerAuthResponseDto
@@ -107,8 +100,8 @@ public class CustomerAuthService : ICustomerAuthService
                 State = dto.State,
                 District = dto.District,
                 IsActive = 1,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 CustomerId = Guid.NewGuid()
             };
 
@@ -116,7 +109,7 @@ public class CustomerAuthService : ICustomerAuthService
             await _context.SaveChangesAsync();
 
             var token = GenerateCustomerJwtToken(customer);
-            var expiresAt = DateTime.UtcNow.AddHours(
+            var expiresAt = DateTime.Now.AddHours(
                 int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24"));
 
             return new CustomerAuthResponseDto
@@ -163,7 +156,7 @@ public class CustomerAuthService : ICustomerAuthService
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24")),
+            expires: DateTime.Now.AddHours(int.Parse(_configuration["Jwt:ExpiryHours"] ?? "24")),
             signingCredentials: credentials
         );
 

@@ -3,16 +3,12 @@ namespace poojaPathBooking.Data;
 using Microsoft.EntityFrameworkCore;
 using poojaPathBooking.Models.Entities;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<PujaType> PujaTypes { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<PujaBooking> PujaBookings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,6 +54,34 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<PujaBooking>(entity =>
+        {
+            entity.HasKey(e => e.BookingId);
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("SYSUTCDATETIME()");
+
+            entity.Property(e => e.BookingStatus)
+                .HasDefaultValue("Pending");
+
+            entity.Property(e => e.IsPaid)
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.Currency)
+                .HasDefaultValue("INR");
+
+            // Configure relationships
+            entity.HasOne(e => e.PujaType)
+                .WithMany()
+                .HasForeignKey(e => e.PujaTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

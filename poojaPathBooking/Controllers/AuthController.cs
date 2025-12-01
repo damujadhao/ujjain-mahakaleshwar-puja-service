@@ -6,16 +6,10 @@ using poojaPathBooking.Services.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
 {
-    private readonly IAuthService _authService;
-    private readonly ILogger<AuthController> _logger;
-
-    public AuthController(IAuthService authService, ILogger<AuthController> logger)
-    {
-        _authService = authService;
-        _logger = logger;
-    }
+    private readonly IAuthService _authService = authService;
+    private readonly ILogger<AuthController> _logger = logger;
 
     /// <summary>
     /// Authenticates a user and returns a JWT token
@@ -47,7 +41,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during login");
-            return StatusCode(500, "An error occurred during login");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -80,7 +74,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during registration");
-            return StatusCode(500, "An error occurred during registration");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
