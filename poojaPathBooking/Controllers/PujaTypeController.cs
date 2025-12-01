@@ -8,16 +8,10 @@ using poojaPathBooking.Services.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PujaTypeController : ControllerBase
+public class PujaTypeController(IPujaTypeService pujaTypeService, ILogger<PujaTypeController> logger) : ControllerBase
 {
-    private readonly IPujaTypeService _pujaTypeService;
-    private readonly ILogger<PujaTypeController> _logger;
-
-    public PujaTypeController(IPujaTypeService pujaTypeService, ILogger<PujaTypeController> logger)
-    {
-        _pujaTypeService = pujaTypeService;
-        _logger = logger;
-    }
+    private readonly IPujaTypeService _pujaTypeService = pujaTypeService;
+    private readonly ILogger<PujaTypeController> _logger = logger;
 
     /// <summary>
     /// Retrieves all puja types from the database
@@ -37,7 +31,7 @@ public class PujaTypeController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving all puja types");
-            return StatusCode(500, "An error occurred while retrieving puja types");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -55,6 +49,7 @@ public class PujaTypeController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Retrieving puja type with ID {Id}", id);
             var pujaType = await _pujaTypeService.GetPujaTypeByIdAsync(id);
 
             if (pujaType == null)
@@ -67,7 +62,7 @@ public class PujaTypeController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving puja type with ID {Id}", id);
-            return StatusCode(500, "An error occurred while retrieving the puja type");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -89,17 +84,17 @@ public class PujaTypeController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving active puja types");
-            return StatusCode(500, "An error occurred while retrieving active puja types");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
     /// <summary>
-    /// Creates a new puja type in the system (Admin or Manager only)
+    /// Creates a new puja type in the system (Admin only)
     /// </summary>
     /// <param name="dto">The puja type details including name, description, price, duration, benefits, and requirements</param>
     /// <returns>The newly created puja type with its assigned ID</returns>
     [HttpPost]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(PujaType), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -120,13 +115,13 @@ public class PujaTypeController : ControllerBase
             }
 
             // Check if user has required role
-            if (!User.IsInRole("Admin") && !User.IsInRole("Manager"))
+            if (!User.IsInRole("Admin"))
             {
                 return StatusCode(403, new 
                 { 
-                    message = "You don't have permission to add puja type data. Only Admin and Manager users can create puja types.",
+                    message = "You don't have permission to add puja type data. Only Admin users can create puja types.",
                     reason = "Insufficient permissions",
-                    requiredRoles = new[] { "Admin", "Manager" },
+                    requiredRoles = new[] { "Admin" },
                     yourRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Unknown"
                 });
             }
@@ -147,26 +142,27 @@ public class PujaTypeController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating puja type");
-            return StatusCode(500, "An error occurred while creating the puja type");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
     /// <summary>
-    /// Updates an existing puja type with new information (Admin or Manager only)
+    /// Updates an existing puja type with new information (Admin only)
     /// </summary>
     /// <param name="id">The unique identifier of the puja type to update</param>
     /// <param name="dto">The updated puja type details</param>
     /// <returns>The updated puja type</returns>
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(PujaType), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdatePujaType(int id, [FromBody] UpdatePujaTypeDto dto)
+    public async Task<IActionResult> UpdatePujaTypeById(int id, [FromBody] UpdatePujaTypeDto dto)
     {
+        _logger.LogInformation("UpdatePujaTypeById called with ID {Id}", id);
         try
         {
             // Check if user is authenticated
@@ -180,13 +176,13 @@ public class PujaTypeController : ControllerBase
             }
 
             // Check if user has required role
-            if (!User.IsInRole("Admin") && !User.IsInRole("Manager"))
+            if (!User.IsInRole("Admin"))
             {
                 return StatusCode(403, new 
                 { 
-                    message = "You don't have permission to update puja type data. Only Admin and Manager users can update puja types.",
+                    message = "You don't have permission to update puja type data. Only Admin users can update puja types.",
                     reason = "Insufficient permissions",
-                    requiredRoles = new[] { "Admin", "Manager" },
+                    requiredRoles = new[] { "Admin" },
                     yourRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Unknown"
                 });
             }
@@ -213,7 +209,7 @@ public class PujaTypeController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating puja type with ID {Id}", id);
-            return StatusCode(500, "An error occurred while updating the puja type");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -229,10 +225,11 @@ public class PujaTypeController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeletePujaType(int id)
+    public async Task<IActionResult> DeletePujaTypeById(int id)
     {
         try
         {
+            _logger.LogInformation("DeletePujaTypeById called with ID {Id}", id);
             // Check if user is authenticated
             if (!User.Identity?.IsAuthenticated ?? true)
             {
@@ -268,12 +265,12 @@ public class PujaTypeController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting puja type with ID {Id}", id);
-            return StatusCode(500, "An error occurred while deleting the puja type");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
     /// <summary>
-    /// Deactivates a puja type without deleting it (Admin or Manager only)
+    /// Deactivates a puja type without deleting it (Admin only)
     /// </summary>
     /// <param name="id">The unique identifier of the puja type to deactivate</param>
     /// <returns>A confirmation message if deactivation is successful</returns>
@@ -281,7 +278,7 @@ public class PujaTypeController : ControllerBase
     /// This sets the IsActive flag to false, making the puja type unavailable for booking while preserving the data
     /// </remarks>
     [HttpPatch("{id:int}/deactivate")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -302,13 +299,13 @@ public class PujaTypeController : ControllerBase
             }
 
             // Check if user has required role
-            if (!User.IsInRole("Admin") && !User.IsInRole("Manager"))
+            if (!User.IsInRole("Admin"))
             {
                 return StatusCode(403, new 
                 { 
-                    message = "You don't have permission to deactivate puja type data. Only Admin and Manager users can deactivate puja types.",
+                    message = "You don't have permission to deactivate puja type data. Only Admin users can deactivate puja types.",
                     reason = "Insufficient permissions",
-                    requiredRoles = new[] { "Admin", "Manager" },
+                    requiredRoles = new[] { "Admin" },
                     yourRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Unknown"
                 });
             }
@@ -325,7 +322,7 @@ public class PujaTypeController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deactivating puja type with ID {Id}", id);
-            return StatusCode(500, "An error occurred while deactivating the puja type");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 }

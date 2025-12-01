@@ -6,16 +6,10 @@ using poojaPathBooking.Models.Entities;
 using poojaPathBooking.Models.DTOs;
 using poojaPathBooking.Services.Interfaces;
 
-public class PujaTypeService : IPujaTypeService
+public class PujaTypeService(ApplicationDbContext context, ILogger<PujaTypeService> logger) : IPujaTypeService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly ILogger<PujaTypeService> _logger;
-
-    public PujaTypeService(ApplicationDbContext context, ILogger<PujaTypeService> logger)
-    {
-        _context = context;
-        _logger = logger;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly ILogger<PujaTypeService> _logger = logger;
 
     public async Task<IEnumerable<PujaType>> GetAllPujaTypesAsync()
     {
@@ -60,6 +54,7 @@ public class PujaTypeService : IPujaTypeService
 
     public async Task<PujaType> CreatePujaTypeAsync(CreatePujaTypeDto dto)
     {
+        _logger.LogInformation("Creating new puja type for data : {@Dto}", dto);
         try
         {
             // Validate required fields
@@ -75,7 +70,7 @@ public class PujaTypeService : IPujaTypeService
                 PoojaDuration = dto.PoojaDuration,
                 RequiredThings = dto.RequiredThings,
                 IsActive = dto.IsActive,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.Now
             };
 
             _context.PujaTypes.Add(pujaType);
@@ -212,12 +207,7 @@ public class PujaTypeService : IPujaTypeService
             errors.Add("ImageUrl cannot exceed 500 characters");
         }
 
-        if (!string.IsNullOrEmpty(dto.PoojaDuration) && dto.PoojaDuration.Length > 100)
-        {
-            errors.Add("PoojaDuration cannot exceed 100 characters");
-        }
-
-        if (errors.Any())
+        if (errors.Count > 0)
         {
             var errorMessage = string.Join("; ", errors);
             _logger.LogWarning("Validation failed: {Errors}", errorMessage);

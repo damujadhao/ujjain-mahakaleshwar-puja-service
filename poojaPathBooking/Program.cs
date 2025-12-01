@@ -46,6 +46,7 @@ builder.Services.AddScoped<IPujaTypeService, PujaTypeService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICustomerAuthService, CustomerAuthService>();
+builder.Services.AddScoped<IPujaBookingService, PujaBookingService>();
 
 // Add Swagger/OpenAPI services
 builder.Services.AddEndpointsApiExplorer();

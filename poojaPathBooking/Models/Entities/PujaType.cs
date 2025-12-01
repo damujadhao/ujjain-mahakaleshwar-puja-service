@@ -34,5 +34,5 @@ public class PujaType
     public bool IsActive { get; set; } = true;
 
     [Required]
-    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedDate { get; set; } = DateTime.Now;
 }

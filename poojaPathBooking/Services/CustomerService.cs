@@ -6,16 +6,10 @@ using poojaPathBooking.Models.Entities;
 using poojaPathBooking.Models.DTOs;
 using poojaPathBooking.Services.Interfaces;
 
-public class CustomerService : ICustomerService
+public class CustomerService(ApplicationDbContext context, ILogger<CustomerService> logger) : ICustomerService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly ILogger<CustomerService> _logger;
-
-    public CustomerService(ApplicationDbContext context, ILogger<CustomerService> logger)
-    {
-        _context = context;
-        _logger = logger;
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly ILogger<CustomerService> _logger = logger;
 
     public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
     {
@@ -127,7 +121,7 @@ public class CustomerService : ICustomerService
                 Country = dto.Country?.Trim(),
                 State = dto.State?.Trim(),
                 District = dto.District?.Trim(),
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             _context.Customers.Add(customer);
@@ -187,7 +181,7 @@ public class CustomerService : ICustomerService
             customer.Country = dto.Country?.Trim();
             customer.State = dto.State?.Trim();
             customer.District = dto.District?.Trim();
-            customer.UpdatedAt = DateTime.UtcNow;
+            customer.UpdatedAt = DateTime.Now;
 
             _context.Entry(customer).State = EntityState.Modified;
             await _context.SaveChangesAsync();

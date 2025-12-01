@@ -7,16 +7,10 @@ using poojaPathBooking.Services.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CustomerAuthController : ControllerBase
+public class CustomerAuthController(ICustomerAuthService customerAuthService, ILogger<CustomerAuthController> logger) : ControllerBase
 {
-    private readonly ICustomerAuthService _customerAuthService;
-    private readonly ILogger<CustomerAuthController> _logger;
-
-    public CustomerAuthController(ICustomerAuthService customerAuthService, ILogger<CustomerAuthController> logger)
-    {
-        _customerAuthService = customerAuthService;
-        _logger = logger;
-    }
+    private readonly ICustomerAuthService _customerAuthService = customerAuthService;
+    private readonly ILogger<CustomerAuthController> _logger = logger;
 
     /// <summary>
     /// Authenticates a customer using email or contact number and returns a JWT token
@@ -58,7 +52,7 @@ public class CustomerAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during customer login");
-            return StatusCode(500, "An error occurred during login");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -92,7 +86,7 @@ public class CustomerAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during customer registration");
-            return StatusCode(500, "An error occurred during registration");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -140,7 +134,7 @@ public class CustomerAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving customer profile");
-            return StatusCode(500, "An error occurred while retrieving profile");
+            return StatusCode(500, new { message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 }
